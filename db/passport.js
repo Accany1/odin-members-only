@@ -1,60 +1,43 @@
-const pool = require("./pool");
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const {findUserByUsername,findUserById} = require('./queries');
+const { validPassword } = require('./passwordUtils');
+const pool = require('./pool');
+const bcrypt = require('bcryptjs');
 
-require('dotenv').config();
+const strategy = new LocalStrategy((async (username, password, done) => {
+      try {
+        const { rows } = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
+        const user = rows[0];
+        console.log(user)
+  
+        if (!user) {
+          return done(null, false, { message: "Incorrect username" });
+        }
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+        // passwords do not match!
+        return done(null, false, { message: "Incorrect password" })
+        }
+        return done(null, user);
+      } catch(err) {
+        return done(err);
+      }
+    }));
 
-async function createUser(fName, lName, username, password, membership) {
-    const client = await pool.connect();
-    try {
-      const result = await client.query(
-        'INSERT INTO users (first_name, last_name, username, password, membership_status) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [fName, lName, username, password, membership]
-      );
-      return result.rows[0];
-    } catch (err) {
-      console.error('Error creating user:', err);
-      throw err; // Re-throw the error to be handled by the caller
-    } finally {
-      client.release();
-    }
-  }
+passport.use(strategy);
 
-async function findUserByUsername(username) {
-    console.log(username)
-    const client = await pool.connect();
-    try {
-        const result = await client.query(
-        'SELECT * FROM users WHERE username = $1',
-        [username]
-        );
-        console.log(result.rows[0])
-        return result.rows[0];
-    } catch (err) {
-        console.error('Error finding user:', err);
-        throw err;
-    } finally {
-        client.release();
-    }
-}
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
 
-async function findUserById(id) {
-    const client = await pool.connect();
-    try {
-        const result = await client.query(
-        'SELECT * FROM users WHERE id = $1',
-        [id]
-        );
-        return result.rows;
-    } catch (err) {
-        console.error('Error finding user:', err);
-        throw err;
-    } finally {
-        client.release();
-    }
-}
-
-
-module.exports = {
-    createUser, 
-    findUserByUsername,
-    findUserById
-};
+passport.deserializeUser(async (userId, done) => {
+    findUserById(userId)
+        .then(user => {
+            done(null, user);
+        })
+        .catch((err) => {
+            console.log(err);
+            done(err);
+        })
+});

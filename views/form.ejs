@@ -1,5 +1,6 @@
 <html>
   <body>
+    <% if (locals.user) {%>
     <h1>Input form</h1>
     <form method="POST" action="/new">
         <formgroup>
@@ -12,6 +13,9 @@
         </formgroup>
         <button type="submit">Submit</button>
     </form>
+    <% } else { %>
+    <h1>Please log in</h1>
+    <% } %>
     <a href="/">Home</a>
   </body>
 </html>

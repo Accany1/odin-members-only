@@ -1,6 +1,12 @@
 <html>
   <body>
     <h1><%- title %></h1>
+    <% if (locals.user) {%>
+      <h1>Welcome <%= user.username %></h1>
+      <a href="/new">Create a new message</a>
+      <a href="/logout">LOG OUT</a>
+    <% } else { %>
+
     <h2>Login</h2>
     <form action="/login" method="POST">
       <label for="username">Username: </label>
@@ -10,11 +16,15 @@
       <button type="submit">Submit</button>
     </form>
     <a href="/signup">Signup</a>
+    <%}%>
+   
     <% messages.map((message) => { %>
         <h2><%= message.title %></h2>
         <p><%= message.contents %></p>
+        <% if (locals.user && locals.user.membership_status) {%>
         <p><%= message.username %></p>
         <p><%= message.sent %></p>
+        <% } %>
       <% }) %>
   </body>
 </html>

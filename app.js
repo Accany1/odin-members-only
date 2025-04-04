@@ -1,10 +1,39 @@
 const express = require('express')
+const passport = require('passport');
+const session = require('express-session');
 const app = express()
 const path = require("node:path");
 const index = require("./routes/index")
+const pg = require('pg');
+
+require('./db/passport');
+
+require('dotenv').config();
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
+
+const pgPool = new pg.Pool({
+  connectionString: process.env.DB_STRING
+});
+
+app.use(session({
+    store: new (require('connect-pg-simple')(session))({
+        pool: pgPool,
+        tableName: 'sessions',
+        createTableIfMissing: true
+      }),
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24
+    }
+})
+)
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use(express.urlencoded({ extended: true }));
 
