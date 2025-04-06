@@ -1,5 +1,5 @@
 const db = require("../db/queries");
-const {createUser, checkUserExist} = require("../db/queries");
+const {createUser, deleteQuery} = require("../db/queries");
 const {genPassword} = require("../db/passwordUtils");
 const { body, validationResult } = require('express-validator');
 const pool = require("../db/pool");
@@ -69,9 +69,13 @@ async function newUser(req, res) {
     if (req.body.member == "iamspecial") {
       membership = true;
     }
+    let isAdmin = false
+    if (req.body.admin === "on") {
+      isAdmin = true;
+    }
     const firstName = req.body.first;
     const lastName = req.body.last;
-    createUser(firstName, lastName, username, password.hash, membership, salt)
+    createUser(firstName, lastName, username, password.hash, membership, salt,isAdmin)
     res.redirect("/");
   } catch (error) {
     console.error(error);
@@ -79,9 +83,22 @@ async function newUser(req, res) {
   }
 }
 
+async function deletePost(id) {
+    const client = await pool.connect();
+    try {
+        const result = await deleteQuery(id)
+        return
+    } catch (err) {
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
 module.exports = {
     usersListGet,
     usersSearchGet,
     newPost,
-    newUser
+    newUser,
+    deletePost
   };

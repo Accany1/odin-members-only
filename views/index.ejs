@@ -25,6 +25,9 @@
         <p><%= message.username %></p>
         <p><%= message.sent %></p>
         <% } %>
+        <% if (locals.user && locals.user.membership_status && locals.user.isadmin) {%>
+          <div><a href="/<%= message.id %>/delete">Delete</a></div>
+          <% } %>
       <% }) %>
   </body>
 </html>

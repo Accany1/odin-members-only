@@ -1,7 +1,7 @@
 const passport = require('passport');
 const {Router} = require('express')
 const app = Router()
-const usersController = require("../controllers/usercontroller");
+const usersController = require("../controllers/userController");
 const { body } = require("express-validator");
 const {checkUserExist} = require("../db/queries");
 
@@ -58,5 +58,9 @@ app.post("/signup",
       } return true;}),
       (req, res, next) => usersController.newUser(req,res))
 
+app.get("/:id/delete", (req, res) => {
+    usersController.deletePost(req.params.id)
+    res.redirect("/")
+})
 
 module.exports = app;

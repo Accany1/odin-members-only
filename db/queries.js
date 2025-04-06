@@ -2,12 +2,12 @@ const pool = require("./pool");
 
 require('dotenv').config();
 
-async function createUser(fName, lName, username, password, membership, salt) {
+async function createUser(fName, lName, username, password, membership, salt,isAdmin) {
     const client = await pool.connect();
     try {
       const result = await client.query(
-        'INSERT INTO users (first_name, last_name, username, password, membership_status,salt) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-        [fName, lName, username, password, membership, salt]
+        'INSERT INTO users (first_name, last_name, username, password, membership_status,salt,isadmin) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        [fName, lName, username, password, membership, salt,isAdmin]
       );
       return result.rows[0];
     } catch (err) {
@@ -70,10 +70,27 @@ async function findUserById(id) {
   }
 }
 
+async function deleteQuery(id) {
+    const client = await pool.connect();
+    console.log(id)
+    try {
+        const result = await client.query(
+            'DELETE FROM posts WHERE id = $1',
+            [id]
+        );
+        return result
+    } catch (err) {
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
 module.exports = {
     createUser,
     getAllMessages,
     findUserByUsername,
     checkUserExist,
-    findUserById
+    findUserById,
+    deleteQuery
 };
